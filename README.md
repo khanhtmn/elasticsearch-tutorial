@@ -60,3 +60,110 @@ Let’s try running an instance of Elasticsearch. In order to do so, you need to
 ```$ curl -X GET "localhost:9200/_cat/indices?v"```
 
 Note: The parameters `?pretty` in step 8 is optional. We just use it to make the JSON format result more readable. You can omit it from the call and it still works completely fine. 
+
+## Short experiments
+
+### Set up the system for the experiment
+
+- Step 1: Clone the tutorial repository
+
+```$ git clone https://github.com/khanhtmn/elasticsearch-tutorial.git```
+
+- Step 2: Change the directory to elasticsearch-tutorial
+
+```$ cd elasticsearch-tutorial```
+
+- Step 3: Set vm.max_map_count
+
+```$ sysctl -w vm.max_map_count=262144```
+
+If you have permission error, then you can run the command with sudo:
+
+```$ sudo sysctl -w vm.max_map_count=262144```
+
+- Step 4: Start the Elasticsearch cluster with 3 nodes
+
+```$ docker-compose up```
+
+It will take a while for all the nodes to be up and running. To test whether the nodes are there yet, you can make a curl call:
+
+```$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"```
+
+### Experiment
+
+In this experiment, we will shut down a node in the 3-node cluster above to see how Elasticsearch handles power outage. We will shut down 2 nodes in total: the first node is the non-master node and the second node is the master node.
+
+To shut down the first non-master node, do the following:
+
+- Step 1: Check the master node
+
+```$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"```
+
+- Step 2: Check the container id of the nodes
+
+```$ docker ps```
+
+- Step 3: Stop the non-master node
+
+```$ docker stop <container ID>```
+
+I stop the es03 node in my case:
+
+```$ docker stop 34b17f47a340```
+
+- Step 4: Check if the cluster is still up with docker and curl
+
+```
+$ docker ps
+$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"
+```
+
+- Step 5: Let’s re-start the node that we shut down and make all the checks in step 4 again
+
+```
+$ docker start <container ID> (from step 3)
+$ docker ps
+$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"
+```
+- Step 6: Stop the master node
+
+Use the container id of the master node from step 3 to shut it down: 
+
+```$ docker stop <container ID>```
+
+I stop the es01 node in my case:
+
+```$ docker stop 85ff9c5fa7f4```
+
+- Step 7: Check the cluster status with docker and curl
+
+```
+$ docker ps
+$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"
+```
+
+- Step 8: Re-start the master node
+
+```$ docker start <container ID> (from step 6)```
+
+I start the es01 node in my case:
+
+```$ docker start 85ff9c5fa7f4```
+
+- Step 9: Check the cluster status with docker and curl again
+
+```
+$ docker ps
+$ curl -X GET "localhost:9200/_cat/nodes?v=true&pretty"
+```
+
+- Step 10: Shut down the cluster
+
+```$ docker-compose down```
+
+
+
+
+
+
+
